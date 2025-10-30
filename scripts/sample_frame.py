@@ -98,15 +98,18 @@ class VaccineArticleCollector:
         if url in self._results:
             return
         rec = self._scrape(url)
-        pt = datetime.strptime(rec["published_time"][:10], "%Y-%m-%d") if rec.get("published_time") else None
-        if rec and self._has_keywords(rec["text"]) and pt >= self.start and pt <= self.end:
+        pt = datetime.strptime(rec["published_time"][:10], "%Y-%m-%d") if rec and rec.get("published_time") else None
+        if rec and self._has_keywords(rec["text"]) and pt and pt >= self.start and pt <= self.end:
             self._results[url] = rec
 
-    def process(self):
-        for domain in self._domains():
+    def process(self, domains = None, urlstart = None):
+        domains = domains if domains is not None else self._domains()
+        for domain in domains:
             urls = self._urls_for_domain(domain)
             if domain == "deseretnews":
                 urls = self._urls_in_date_range(urls)
+            start = urlstart if urlstart is not None else 0
+            urls = urls[start:]
             for url in tqdm(urls, desc=f"Processing {domain}"):
                 self._process_url(url)
                 if self.sleep_sec:
@@ -126,5 +129,5 @@ if __name__ == "__main__":
         end_date="2024-01-01",
         keywords=DEFAULT_KEY_WORDS,
     )
-    collector.process()
+    collector.process(domains=['ksl'], urlstart=32912)
     collector.save()

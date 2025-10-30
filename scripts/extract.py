@@ -60,7 +60,24 @@ def _clean_spaces(s: str) -> str:
     return s.strip()
 
 def parse_date_str(month, day, year):
-    month = month.replace(".", "")
+    month = month.strip().replace(".", "").title()
+    
+    month_map = {
+        "Jan": "Jan", "January": "January",
+        "Feb": "Feb", "February": "February",
+        "Mar": "Mar", "March": "March",
+        "Apr": "Apr", "April": "April",
+        "May": "May",
+        "Jun": "Jun", "June": "June",
+        "Jul": "Jul", "July": "July",
+        "Aug": "Aug", "August": "August",
+        "Sept": "Sep", "Sep": "Sep", "September": "September",
+        "Oct": "Oct", "October": "October",
+        "Nov": "Nov", "November": "November",
+        "Dec": "Dec", "December": "December"
+    }
+
+    month = month_map.get(month, month)
     try:
         dt = datetime.strptime(f"{month} {day}, {year}", "%b %d, %Y")
     except ValueError:

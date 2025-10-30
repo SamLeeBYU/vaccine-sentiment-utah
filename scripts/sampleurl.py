@@ -29,17 +29,26 @@ def filter_urls(df, start="2017-01-01", end="2025-01-01"):
     return df.loc[mask].sort_values("date").reset_index(drop=True)
 
 def plot_articles_by_month(df):
+    df = df.dropna(subset=["date", "site"])
     monthly_counts = (
-        df.dropna(subset=["date"])
-          .groupby(df["date"].dt.to_period("M"))
+        df.groupby([df["date"].dt.to_period("M"), "site"])
           .size()
+          .unstack(fill_value=0)
           .to_timestamp()
     )
-    plt.figure(figsize=(10,4))
-    plt.plot(monthly_counts.index, monthly_counts.values, marker="o")
-    plt.title("Articles by Month")
+
+    plt.figure(figsize=(10, 4))
+    for site in monthly_counts.columns:
+        plt.plot(
+            monthly_counts.index,
+            monthly_counts[site],
+            marker="o",
+            label=site
+        )
+    plt.title("Articles by Month and Site")
     plt.xlabel("Month")
     plt.ylabel("Count")
+    plt.legend()
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     plt.show()

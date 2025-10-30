@@ -1,7 +1,25 @@
-data/*
+gemma-api-key.txt
 
-# Created by https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,windows,macos
-# Edit at https://www.toptal.com/developers/gitignore?templates=python,jupyternotebooks,windows,macos
+keras/
+
+### Data ###
+data/sitemaps.json
+data/utah_news_sources.csv
+data/vaccine_articles_1.json
+data/vaccine_articles.json
+data/example_extracted.json
+
+*.dat
+*.efx
+*.gbr
+*.key
+*.pps
+*.ppt
+*.pptx
+*.sdf
+*.tax2010
+*.vcf
+*.xml
 
 ### JupyterNotebooks ###
 # gitignore template for Jupyter Notebooks
@@ -245,4 +263,3 @@ $RECYCLE.BIN/
 # Windows shortcuts
 *.lnk
 
-# End of https://www.toptal.com/developers/gitignore/api/python,jupyternotebooks,windows,macos

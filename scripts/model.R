@@ -115,7 +115,38 @@ model.code <- nimbleCode({
   }
 })
 
-nimble.dat = format.data(prelim)
+main.dat <- readr::read_csv("data/sentiment_classification_main.csv")
+main.dat$stance <- get.stance(as.matrix(main.dat[, str_c(
+  "stance",
+  LETTERS[1:4]
+)]))
+
+col_map <- c("Deseret News" = "#2B65EC", "ksl.com" = "#E69F00")
+
+ggplot(
+  main.dat[sample(1:nrow(main.dat)), ],
+  aes(x = date, y = stanceB, color = site)
+) +
+  geom_jitter(width = 0.1, height = 0.1, alpha = 0.5, size = 1.2) +
+  #geom_smooth(method = "loess", span = 0.3, se = TRUE, aes(fill = site)) +
+  scale_color_manual(values = col_map, name = "Site") +
+  scale_fill_manual(values = col_map, name = "Site") +
+  scale_x_date(date_breaks = "6 months", date_labels = "%Y-%m") +
+  labs(
+    x = "Date",
+    y = "Number of 'B' Stances Classified"
+  ) +
+  theme_minimal(base_size = 20) +
+  theme(
+    plot.title = element_text(face = "bold"),
+    axis.text.x = element_text(angle = 45, hjust = 1),
+    legend.position = "top",
+    legend.box = "horizontal",
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_blank()
+  )
+
+nimble.dat = format.data(main.dat)
 
 #Vaccine sentiment model
 vsm <- nimbleModel(
@@ -136,9 +167,9 @@ vsm.compiled.mcmc <- compileNimble(vsm.mcmc, project = vsm)
 
 vsm.out <- runMCMC(
   vsm.compiled.mcmc,
-  niter = 100000,
+  niter = 200000,
   nburnin = 1000,
-  thin = 100,
+  thin = 200,
   nchains = 4,
   samplesAsCodaMCMC = TRUE,
   summary = T
@@ -165,15 +196,15 @@ pre = 1 * (t < 0)
 post = 1 * (t >= 0)
 
 #For DN
-eta0DN <- betaDN + mu[, 3]
+eta0DN <- betaDN + mu[, 4]
 p.preDN <- pnorm(eta0DN)
-p.postDN <- pnorm(eta0DN + (mu[, 4] - mu[, 3]) + gamma)
+p.postDN <- pnorm(eta0DN + gamma)
 DeltaDN <- p.postDN - p.preDN
 
 #For KSL
-eta0KSL <- betaKSL + mu[, 16]
+eta0KSL <- betaKSL + mu[, 17]
 p.preKSL <- pnorm(eta0KSL)
-p.postKSL <- pnorm(eta0KSL + (mu[, 17] - mu[, 16]) + gamma)
+p.postKSL <- pnorm(eta0KSL + gamma)
 DeltaKSL <- p.postKSL - p.preKSL
 
 ##### RESULTS #####
@@ -227,11 +258,12 @@ col_map <- c("Deseret News" = "#2B65EC", "KSL" = "#E69F00")
 
 ggplot(df_plot, aes(x = x, y = y, color = site, fill = site)) +
   geom_area(data = subset(df_plot, in_ci), alpha = 0.25, linewidth = 0) +
-  geom_vline(xintercept = 0) +
+  geom_line() +
+  geom_vline(xintercept = 0, linetype = "dashed") +
   scale_color_manual(values = col_map, name = "Site") +
   scale_fill_manual(values = col_map, name = "Site") +
   labs(
-    title = "Posterior of probability jump at the COVID shock",
+    title = "Posterior Probability Jump at COVID shock",
     subtitle = "Shaded area is the 95% credible interval",
     x = "Change in Probability at t=0",
     y = "Density",
@@ -274,9 +306,9 @@ summarize_eta <- function(eta_mat, time_vec) {
   p_mat <- pnorm(eta_mat)
   tibble(
     date = time_vec,
-    mean = colMeans(p_mat),
-    lwr = apply(p_mat, 2, quantile, 0.025),
-    upr = apply(p_mat, 2, quantile, 0.975)
+    mean = colMeans(p_mat, na.rm = T),
+    lwr = apply(p_mat, 2, quantile, 0.025, na.rm = T),
+    upr = apply(p_mat, 2, quantile, 0.975, na.rm = T)
   )
 }
 
@@ -293,7 +325,7 @@ t0 <- as.Date(nimble.dat$scale$t.0)
 
 ggplot(df_plot, aes(x = date, y = mean, color = site, fill = site)) +
   geom_ribbon(aes(ymin = lwr, ymax = upr), alpha = 0.15, linewidth = 0) +
-  geom_line(linewidth = 0.7) +
+  geom_line(linewidth = 2) +
   geom_vline(xintercept = as.numeric(t0), linetype = "dashed") +
   scale_color_manual(values = col_map, name = "Site") +
   scale_fill_manual(values = col_map, name = "Site") +

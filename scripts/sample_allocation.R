@@ -279,13 +279,25 @@ ggplot(n.h, aes(x = Date, y = n.h, color = Site)) +
     panel.grid.major.x = element_blank()
   )
 
-n.h$date =
-  #Display sample for paper
-  rbind(head(main.sample, 10), tail(main.sample, 10)) %>%
+main.dat <- read_csv("data/sentiment_classification_main.csv")
+main.dat$stance <- get.stance(as.matrix(main.dat[, str_c(
+  "stance",
+  LETTERS[1:4]
+)]))
+main.dat$obs <- 1:nrow(main.dat)
+
+#Display sample for paper
+rbind(head(main.dat, 10), tail(main.dat, 10)) %>%
   dplyr::select(
+    obs,
     title,
     site,
     date,
-    strata
+    strata,
+    stanceA,
+    stanceB,
+    stanceC,
+    stanceD,
+    stance
   ) %>%
   View()
